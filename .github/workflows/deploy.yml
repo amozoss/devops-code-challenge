@@ -70,11 +70,6 @@ jobs:
         working-directory: ./terraform
         run: terraform init
 
-      - name: Import existing Artifact Registry repository
-        working-directory: ./terraform
-        run: |
-          terraform import google_artifact_registry_repository.hello_world projects/${{ env.PROJECT_ID }}/locations/${{ env.REGION }}/repositories/hello-world-repo || echo "Repository already imported or doesn't exist"
-
       - name: Terraform Plan
         working-directory: ./terraform
         run: terraform plan -var="project_id=${{ env.PROJECT_ID }}" -var="region=${{ env.REGION }}" -var="image_tag=${{ github.sha }}"

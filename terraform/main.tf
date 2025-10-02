@@ -6,6 +6,11 @@ terraform {
       version = "~> 5.0"
     }
   }
+
+  backend "gcs" {
+    bucket = "dev-ops-code-challenge-terraform-state"
+    prefix = "terraform/state"
+  }
 }
 
 provider "google" {
@@ -24,6 +29,25 @@ resource "google_project_service" "cloud_build_api" {
 
 resource "google_project_service" "container_registry_api" {
   service = "containerregistry.googleapis.com"
+}
+
+resource "google_project_service" "storage_api" {
+  service = "storage.googleapis.com"
+}
+
+# GCS bucket for Terraform state
+resource "google_storage_bucket" "terraform_state" {
+  name          = "dev-ops-code-challenge-terraform-state"
+  location      = "US"
+  force_destroy = false
+
+  versioning {
+    enabled = true
+  }
+
+  depends_on = [
+    google_project_service.storage_api
+  ]
 }
 
 # Cloud Run service

@@ -162,6 +162,10 @@ If you prefer to deploy manually without Terraform:
      --member="serviceAccount:github-actions@dev-ops-code-challenge.iam.gserviceaccount.com" \
      --role="roles/editor"
 
+   gcloud projects add-iam-policy-binding dev-ops-code-challenge \
+     --member="serviceAccount:github-actions@dev-ops-code-challenge.iam.gserviceaccount.com" \
+     --role="roles/storage.admin"
+
    # Create and download key
    gcloud iam service-accounts keys create key.json \
      --iam-account=github-actions@dev-ops-code-challenge.iam.gserviceaccount.com
