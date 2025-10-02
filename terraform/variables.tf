@@ -8,3 +8,9 @@ variable "region" {
   type        = string
   default     = "us-central1"
 }
+
+variable "image_tag" {
+  description = "The Docker image tag to deploy"
+  type        = string
+  default     = "latest"
+}

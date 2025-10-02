@@ -33,7 +33,7 @@ resource "google_cloud_run_v2_service" "hello_world" {
 
   template {
     containers {
-      image = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.hello_world.name}/hello-world:latest"
+      image = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.hello_world.name}/hello-world:${var.image_tag}"
 
       ports {
         container_port = 8080

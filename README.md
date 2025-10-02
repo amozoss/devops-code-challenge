@@ -158,6 +158,10 @@ If you prefer to deploy manually without Terraform:
      --member="serviceAccount:github-actions@dev-ops-code-challenge.iam.gserviceaccount.com" \
      --role="roles/artifactregistry.admin"
 
+   gcloud projects add-iam-policy-binding dev-ops-code-challenge \
+     --member="serviceAccount:github-actions@dev-ops-code-challenge.iam.gserviceaccount.com" \
+     --role="roles/editor"
+
    # Create and download key
    gcloud iam service-accounts keys create key.json \
      --iam-account=github-actions@dev-ops-code-challenge.iam.gserviceaccount.com
@@ -172,10 +176,11 @@ If you prefer to deploy manually without Terraform:
 The GitHub Actions workflow will:
 
 1. Run tests (currently just a placeholder)
-2. Build the Docker image
+2. Build the Docker image with the correct platform (linux/amd64)
 3. Push to Google Artifact Registry
-4. Deploy to Cloud Run
-5. Make the service publicly accessible
+4. Initialize and run Terraform to deploy infrastructure
+5. Deploy the application to Cloud Run using Terraform
+6. Make the service publicly accessible
 
 ## Project Structure
 

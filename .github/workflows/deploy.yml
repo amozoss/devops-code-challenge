@@ -58,18 +58,29 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker build -t $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/hello-world-repo/hello-world:$GITHUB_SHA .
+          docker build --platform linux/amd64 -t $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/hello-world-repo/hello-world:$GITHUB_SHA .
           docker push $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/hello-world-repo/hello-world:$GITHUB_SHA
 
-      - name: Deploy to Cloud Run
-        run: |
-          gcloud run deploy $SERVICE \
-            --image $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/hello-world-repo/hello-world:$GITHUB_SHA \
-            --platform managed \
-            --region $REGION \
-            --allow-unauthenticated \
-            --port 8080
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.13.3
 
-      - name: Show service URL
+      - name: Terraform Init
+        working-directory: ./terraform
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: ./terraform
+        run: terraform plan -var="project_id=${{ env.PROJECT_ID }}" -var="region=${{ env.REGION }}" -var="image_tag=${{ github.sha }}"
+
+      - name: Terraform Apply
+        working-directory: ./terraform
+        run: terraform apply -auto-approve -var="project_id=${{ env.PROJECT_ID }}" -var="region=${{ env.REGION }}" -var="image_tag=${{ github.sha }}"
+
+      - name: Get Service URL
+        working-directory: ./terraform
         run: |
-          gcloud run services describe $SERVICE --region=$REGION --format='value(status.url)'
+          SERVICE_URL=$(terraform output -raw service_url)
+          echo "Service deployed at: $SERVICE_URL"
+          echo "SERVICE_URL=$SERVICE_URL" >> $GITHUB_ENV
