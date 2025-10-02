@@ -35,19 +35,9 @@ resource "google_project_service" "storage_api" {
   service = "storage.googleapis.com"
 }
 
-# GCS bucket for Terraform state
-resource "google_storage_bucket" "terraform_state" {
-  name          = "dev-ops-code-challenge-terraform-state"
-  location      = "US"
-  force_destroy = false
-
-  versioning {
-    enabled = true
-  }
-
-  depends_on = [
-    google_project_service.storage_api
-  ]
+# Data source for existing GCS bucket for Terraform state
+data "google_storage_bucket" "terraform_state" {
+  name = "dev-ops-code-challenge-terraform-state"
 }
 
 # Cloud Run service
