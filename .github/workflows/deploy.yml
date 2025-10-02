@@ -1,0 +1,75 @@
+name: Deploy to GCP Cloud Run
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GAR_LOCATION: us-central1
+  SERVICE: hello-world-app
+  REGION: us-central1
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests (if any)
+        run: echo "No tests defined yet"
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Google Auth
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker to use gcloud as a credential helper
+        run: gcloud auth configure-docker $GAR_LOCATION-docker.pkg.dev
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/hello-world-repo/hello-world:$GITHUB_SHA .
+          docker push $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/hello-world-repo/hello-world:$GITHUB_SHA
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy $SERVICE \
+            --image $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/hello-world-repo/hello-world:$GITHUB_SHA \
+            --platform managed \
+            --region $REGION \
+            --allow-unauthenticated \
+            --port 8080
+
+      - name: Show service URL
+        run: |
+          gcloud run services describe $SERVICE --region=$REGION --format='value(status.url)'
